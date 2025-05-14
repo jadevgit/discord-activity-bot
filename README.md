@@ -25,7 +25,7 @@ A simple and modular Discord bot built using [discord.py](https://github.com/Rap
 1. **Clone the repository**  
 ```bash
 git clone https://github.com/jadevgit/discord-activity-bot
-cd discord-activity-bot
+cd /path/to/discord-activity-bot
 ```
 
 2. **Add a .env file**

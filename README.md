@@ -26,3 +26,7 @@ A simple and modular Discord bot built using [discord.py](https://github.com/Rap
 ```bash
 git clone https://github.com/jadevgit/discord-activity-bot
 cd discord-activity-bot
+```
+
+2. **Add a .env file**
+   It is recommended to use a .env file which is declared within the .gitignore file (if publishing) for better security of your API keys. The program uses the dotenv library and load-dotenv to grab the API key. It should be named API_KEY in the file.

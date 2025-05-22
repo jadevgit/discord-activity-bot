@@ -2,7 +2,12 @@ import discord
 from discord.ext import commands
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from dotenv import load_dotenv
+import os
 
+
+load_dotenv()
+api_key = os.getenv('API_KEY')
 # Time format
 def getTime():
     return datetime.now(ZoneInfo("Europe/London"))
@@ -15,6 +20,9 @@ def format_seconds_to_hms(seconds):
 class Client(commands.Bot):
     async def on_ready(self):
         print(f"Logged on as {self.user}!")
+        self.tree.copy_global_to(guild=GUILD_ID)
+        await self.tree.sync(guild=GUILD_ID)
+        print("Slash commands synced to guild.")
 
 
 
@@ -24,7 +32,37 @@ intents.message_content = True
 client = Client(command_prefix="!", intents=intents)
 
 GUILD_ID = discord.Object(id=849185187262889985)
+CHANNEL_ID = 1371883132340670474
 
+
+
+class FeedbackSubmitModal(discord.ui.Modal, title="Submit feedback"):
+    tOn_title = discord.ui.TextInput(
+        style=discord.TextStyle.short,
+        label = "Title",
+        required=True,
+        placeholder="Enter the title of your feedback"
+    )
+
+    feedbackDesc = discord.ui.TextInput(
+        style=discord.TextStyle.long,
+        required= True,
+        label="Feedback description",
+        placeholder= "Enter text here"
+    )
+
+    async def on_submit(self, interaction: discord.Interaction):
+        channel = interaction.guild.get_channel(CHANNEL_ID)
+
+        embed = discord.Embed(
+            title="New Feedback",
+            description=self.feedbackDesc.value,  
+            color=discord.Color.blurple()
+        )
+        embed.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url)
+
+        await channel.send(embed=embed)
+        await interaction.response.send_message(f"Thank you, {interaction.user.display_name}!", ephemeral=True)
 
 
 
@@ -39,7 +77,6 @@ class ShiftView(discord.ui.View):
     @discord.ui.button(label="End Shift",style=discord.ButtonStyle.red )
     async def shiftEnd_callback(self,button:discord.ui.button, interaction: discord.Interaction):
         timeOff = getTime()
-        CHANNEL_ID = 1371883132340670474
         channel = client.get_channel(CHANNEL_ID)
         user = button.user
         
@@ -58,15 +95,22 @@ async def shift(interaction: discord.Interaction):
         description="", 
         colour=discord.Colour.dark_green()
     )
-    embed.set_thumbnail(url="https://tr.rbxcdn.com/180DAY-3cc4aea963906cced4c5cf4c8e6a6ad4/150/150/Image/Webp/noFilter")
+    embed.set_thumbnail(url="https://tr.rbxcdn.com/180DAY-3cc4aea963906cced4ccf4c8e6a6ad4/150/150/Image/Webp/noFilter")
     embed.add_field(name="Clock On", value="You must press the \"Clock On\" button to clock in.", inline=False)
     embed.add_field(name="Clock Off", value="You must press the \"Clock Off\" button to clock out.", inline=False)
-    embed.set_footer(text="DEV BUILD DEV BUILD DEV BUILD")
     embed.set_author(name=interaction.user.name, icon_url="https://tr.rbxcdn.com/180DAY-ba170723373bd8c557e278ebe3f33322/150/150/Image/Webp/noFilter")
 
     # Send the embed with the button attached
     await interaction.response.send_message(embed=embed, view=ShiftView())
 
-client.run('api_key')
+
+@client.tree.command(name="feedback",description="Use this command to send feedback to this server's staff!",guild=GUILD_ID)
+async def feedback(interaction: discord.Interaction):
+    feedback_modal = FeedbackSubmitModal()
+    feedback_modal.user = interaction.user
+    await interaction.response.send_modal(feedback_modal)
+
+
+client.run(api_key)
 
 
